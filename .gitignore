@@ -41,3 +41,5 @@ checkpoint.jsonl
 .idea/
 RESULT.md
 PLAN.md
+
+analysis/configs/
