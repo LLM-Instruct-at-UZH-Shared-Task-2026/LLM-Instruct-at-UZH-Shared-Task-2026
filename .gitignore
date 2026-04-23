@@ -13,6 +13,7 @@ __pycache__/
 # Dataset and local caches
 data_cache/
 dataset/
+analysis/
 
 # Generated outputs and run artifacts
 outputs/
