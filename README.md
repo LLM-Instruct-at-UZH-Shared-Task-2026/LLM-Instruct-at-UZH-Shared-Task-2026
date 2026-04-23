@@ -1,4 +1,4 @@
-# LLM-Instruct ArgMining 2026 Pipeline
+# LLM-Instruct at UZH Shared Task - ArgMining 2026
 
 This repository contains the code used to run the LLM-Instruct system for the ArgMining Workshop 2026 shared task.
 
