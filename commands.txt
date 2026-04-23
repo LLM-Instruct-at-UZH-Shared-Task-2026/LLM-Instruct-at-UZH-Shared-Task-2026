@@ -1,0 +1,56 @@
+# ─────────────────────────────────────────────────
+# Pipeline
+# ─────────────────────────────────────────────────
+
+# Run full pipeline (auto run-id)
+python -m src.run
+
+# Run with explicit run-id
+python -m src.run --run-id my_run_001
+
+# Output: outputs/runs/<run-id>/submission.json
+
+# ─────────────────────────────────────────────────
+# Gemini Judge
+# ─────────────────────────────────────────────────
+
+# Full judge run (all tasks, auto run-id)
+python eval/judge.py
+
+# Full run + save Gemini reference labels for reuse
+python eval/judge.py --save-ground-truth --run-id baseline_gt
+
+# Evaluate new submission using saved Gemini reference (Task 1 skips API calls)
+python eval/judge.py \
+  --load-ground-truth baseline_gt \
+  --submission outputs/runs/my_run_001/submission.json \
+  --run-id my_run_001_eval
+
+# Task 1 only (type + tags)
+python eval/judge.py --task1-only --run-id t1_check
+
+# Task 2 only (relations)
+python eval/judge.py --task2-only --run-id t2_check
+
+# Re-run previously failed cases
+python eval/judge.py --rerun-errors 20260305_original
+
+# ─────────────────────────────────────────────────
+# Threshold sweep (config.yaml changes, re-judge)
+# ─────────────────────────────────────────────────
+# 1. Edit config.yaml: tag_conf_threshold, k_tag_candidates, max_tags_per_para
+# 2. Re-run pipeline:
+#      python src/run.py --run-id sweep_thr035_k40
+# 3. Re-judge Task 1b using saved reference:
+#      python eval/judge.py \
+#        --load-ground-truth baseline_gt \
+#        --submission outputs/runs/sweep_thr035_k40/submission.json \
+#        --task1-only \
+#        --run-id sweep_thr035_k40_eval
+
+# ─────────────────────────────────────────────────
+# Ground truth files (once --save-ground-truth has been run)
+# ─────────────────────────────────────────────────
+# eval/runs/<run-id>/ground_truth_types.json  — type labels per para
+# eval/runs/<run-id>/ground_truth_tags.json   — tag lists per para
+# Key format: "TEXT_ID|||para_number"

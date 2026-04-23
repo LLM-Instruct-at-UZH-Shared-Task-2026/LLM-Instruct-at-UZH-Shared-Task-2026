@@ -1,0 +1,103 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Gemini Judge Settings
+# API key & model name are loaded from .env (GOOGLE_API_KEY, GEMINI_MODEL)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Đường dẫn input/output
+paths:
+  submission:    outputs/submission.json
+  tags_csv:      dataset/education_dimensions_updated.csv
+  # Mỗi judge run lưu vào eval/runs/{run_id}/  (report.json, summary.txt, run.log)
+  runs_dir:      eval/runs
+
+# Giới hạn để kiểm soát chi phí API
+sampling:
+  # Số docs đánh giá (-1 = tất cả)
+  eval_docs: -1
+  # Seed cho reproducibility
+  seed: 42
+  # Số relations mẫu mỗi doc cho Task 2 judge (≤0 = tất cả)
+  max_relations_per_doc: 8
+
+# ─── Task 1a: Type Classification ────────────────────────────────────────────
+task1_type:
+  enabled: true
+  # Số paras gửi Gemini mỗi lần (batch)
+  batch_size: 25
+  # Prompt language cho Gemini
+  lang: en
+  # Nhãn hợp lệ
+  valid_labels: [preambular, operative]
+
+# ─── Task 1b: Tag Assignment ──────────────────────────────────────────────────
+task1_tags:
+  enabled: true
+  # Số paras gửi Gemini mỗi lần (nhỏ hơn vì prompt dài hơn)
+  batch_size: 8
+  lang: en
+  # Số tags tối đa Gemini gán mỗi para
+  max_tags_per_para: 5
+  # Threshold F1 (chỉ dùng để highlight)
+  f1_warn_threshold: 0.35
+
+# ─── Task 2: Relation Judge ───────────────────────────────────────────────────
+task2_relations:
+  enabled: true
+  # Thang điểm 1-5
+  score_range: [1, 5]
+  # Trọng số cho từng tiêu chí
+  criteria_weights:
+    correctness:   0.40   # Relation label đúng với nội dung văn bản
+    plausibility:  0.30   # Có hợp lý về mặt logic, discourse không
+    specificity:   0.15   # Relation đủ cụ thể, không chung chung
+    coherence:     0.15   # Nhất quán với các relations khác trong doc
+
+  # Định nghĩa từng loại relation (dùng trong prompt)
+  relation_definitions:
+    supporting: >
+      Paragraph A explicitly supports, reinforces, or provides evidence for the
+      position or claim stated in paragraph B. The content of A would increase
+      confidence in B.
+    contradictive: >
+      Paragraph A contradicts, opposes, or is incompatible with paragraph B.
+      If A is true, B is weakened, qualified, or negated in whole or in part.
+    complemental: >
+      Paragraph A adds different but related information to paragraph B,
+      expanding the scope or providing additional context without directly
+      supporting or opposing B. Together they form a fuller picture.
+    modifying: >
+      Paragraph A restricts, conditions, refines, or qualifies the scope of
+      paragraph B. A does not negate B but narrows its application or adds
+      precise conditions under which B holds.
+
+  # Template câu hỏi judge (không thay đổi trừ khi cần)
+  judge_prompt_template: |
+    You are an expert judge evaluating argument mining predictions in UN/UNESCO resolutions.
+
+    RELATION DEFINITIONS:
+    {relation_definitions}
+
+    PARAGRAPH A (#{para_a_num}):
+    {para_a_text}
+
+    PARAGRAPH B (#{para_b_num}):
+    {para_b_text}
+
+    PREDICTED RELATION: "{predicted_relation}" (A → B)
+
+    Score the prediction on each criterion (1=very poor, 5=excellent):
+    - correctness:  Is the predicted relation label correct given the text content?
+    - plausibility: Is the relation logically plausible in this discourse context?
+    - specificity:  Is the label specific enough (not just defaulting to "complemental")?
+    - coherence:    Is this consistent with typical UN resolution argument structure?
+
+    Also suggest the BEST relation label (one of: supporting, contradictive, complemental, modifying, none).
+
+    Return STRICT JSON only, no markdown:
+    {
+      "scores": {"correctness": 1-5, "plausibility": 1-5, "specificity": 1-5, "coherence": 1-5},
+      "weighted_score": 1.0-5.0,
+      "best_label": "...",
+      "label_match": true/false,
+      "reasoning": "one sentence"
+    }

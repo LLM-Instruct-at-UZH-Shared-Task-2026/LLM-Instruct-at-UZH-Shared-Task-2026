@@ -1,0 +1,41 @@
+# Python virtual environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Dataset and local caches
+data_cache/
+dataset/
+
+# Generated outputs and run artifacts
+outputs/
+results/
+final_submission/
+reports/
+results.zip
+analysis/task_*/
+eval/gpt_pseudolabel/
+eval/runs/
+eval/*.json
+eval/*.log
+eval/*.txt
+*gemini*
+
+# Checkpoints and temporary files
+*.tmp
+*.log
+checkpoint.jsonl
+
+# OS/editor noise
+.DS_Store
+.vscode/
+.idea/
+RESULT.md
+PLAN.md
